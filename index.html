@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>瀚中子的祖国美景亲眼目睹计划</title>
+  <!-- 引入高德地图 JS API -->
+  <script src="https://webapi.amap.com/maps?v=2.0&key=3b3f4d752bf992ad00d41c8c4f1eca7e"></script>
+  <style>
+    body {
+      font-family: "Comic Sans MS", "Comic Sans", cursive;
+      margin: 0;
+      padding: 0;
+      background-color: #fffcf2;
+      color: #444;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin: 20px 0;
+      color: #ff6347;
+      text-shadow: 2px 2px #ffe4b5;
+    }
+
+    .progress-container {
+      margin: 20px auto;
+      width: 80%;
+      background-color: #ffe4b5;
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      height: 40px;
+      box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 6.71%; /* 44/656 * 100 */
+      background-color: #ff6347;
+      text-align: center;
+      color: white;
+      line-height: 40px;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
+    #map-container {
+      margin: 20px auto;
+      width: 80%;
+      height: 500px;
+      background-color: white;
+      border: 2px solid #ffe4b5;
+      border-radius: 10px;
+      box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .visited-list {
+      margin: 20px auto;
+      width: 80%;
+      text-align: left;
+      background-color: #fff8dc;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .visited-list h2 {
+      font-size: 1.5rem;
+      color: #ff4500;
+      text-shadow: 1px 1px #fff8dc;
+      margin-bottom: 10px;
+    }
+
+    .visited-list ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .visited-list li {
+      font-size: 1.2rem;
+      margin: 5px 0;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .visited-list li:before {
+      content: "🎯";
+      margin-right: 10px;
+    }
+
+    .calligraphy {
+      font-family: "KaiTi", "STKaiti", cursive; /* 毛笔字体 */
+      font-size: 1.2rem;
+      line-height: 1.8;
+      margin: 20px auto;
+      text-align: center;
+      padding: 10px 20px;
+      background-color: #fff8dc;
+      color: #333;
+      border-radius: 10px;
+      box-shadow: 3px 3px 10px rgba(0, 0, 0, 0.1);
+      width: 80%;
+    }
+
+    /* 底部等待动画 */
+    .loading-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #ffe4b5;
+      color: #ff6347;
+      text-align: center;
+      font-family: "KaiTi", "STKaiti", cursive;
+      font-size: 1.5rem;
+      padding: 10px 0;
+      box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .loading-spinner {
+      margin: 10px auto 0;
+      width: 30px;
+      height: 30px;
+      border: 5px solid #ff6347;
+      border-top: 5px solid #ffe4b5;
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>瀚中子的祖国美景亲眼目睹计划</h1>
+
+
+  <!-- 进度条 -->
+  <div class="progress-container">
+    <div class="progress-bar">6.71%</div>
+  </div>
+
+  <!-- 地图容器 -->
+  <div id="map-container"></div>
+
+    <!-- 毛笔字体描述 -->
+    <div class="calligraphy">
+        <p>小时候课本上学到的祖国的大好山河是我这西北井底之蛙一直向往的，它们从小就激励着我要走出村里，激励着我要靠自己的努力，用脚丈量祖国！</p>
+        <p>现在终于长大自食其力了...</p>
+        <p><strong>人生苦短，终归尘土。这世间多少好景色，我要亲眼去看看！！！</strong></p>
+      </div>
+    
+  <!-- 已访问城市列表 -->
+  <div class="visited-list">
+    <h2>🎉 我去过的城市 🎉</h2>
+    <ul id="city-list"></ul>
+  </div>
+
+  <!-- 底部等待动画 -->
+  <div class="loading-footer">
+    努力工作，努力攒钱中
+    <div class="loading-spinner"></div>
+  </div>
+
+  <script>
+    // 已访问城市坐标
+    const cityCoordinates = {
+      "南京": [118.796877, 32.060255],
+      "南通": [120.864608, 32.016212],
+      "盐城": [120.163562, 33.347382],
+      "宿迁": [118.27549, 33.963008],
+      "枣庄": [117.323725, 34.810487],
+      "济南": [117.000923, 36.675807],
+      "秦皇岛": [119.600492, 39.935385],
+      "杭州": [120.15507, 30.274084],
+      "嘉兴": [120.755486, 30.746129],
+      "上海": [121.473701, 31.230416],
+      "苏州": [120.619585, 31.299379],
+      "徐州": [117.184811, 34.261792],
+      "成都": [104.066541, 30.572269],
+      "北京": [116.407396, 39.9042],
+      "三亚": [109.512091, 18.252847],
+    };
+
+    // 初始化高德地图
+    const map = new AMap.Map('map-container', {
+      zoom: 4, // 缩放级别
+      center: [104.114129, 37.550339], // 地图中心点
+      mapStyle: 'amap://styles/normal', // 默认样式
+    });
+
+    // 标注已访问城市
+    Object.entries(cityCoordinates).forEach(([city, coordinates]) => {
+      new AMap.Marker({
+        position: coordinates,
+        map,
+        content: `<div style="background-color: #ff6347; width: 10px; height: 10px; border-radius: 50%;"></div>`,
+        title: city, // 显示城市名称
+      });
+
+      // 将城市名称加入列表
+      const cityList = document.getElementById('city-list');
+      const listItem = document.createElement('li');
+      listItem.textContent = city;
+      cityList.appendChild(listItem);
+    });
+  </script>
+</body>
+</html>
